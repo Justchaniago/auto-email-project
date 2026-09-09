@@ -1,6 +1,7 @@
 import logging
 from datetime import date
 from flask import Flask, jsonify, request
+from werkzeug.exceptions import HTTPException
 from app.config import Settings
 from app.domain.errors import AutoEmailError
 from app.gmail.client import GmailClientFactory
@@ -37,11 +38,16 @@ def create_app(service=None, settings=None):
     def known_error(error):
         return jsonify({'status': 'error', 'error': {'code': error.code, 'message': error.safe_message}}), error.http_status
 
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(error):
+        return jsonify({'status': 'error', 'error': {'code': error.name.lower().replace(' ', '_'), 'message': error.description}}), error.code
+
     @app.errorhandler(Exception)
     def unknown_error(error):
         log.exception('unhandled_request_error', extra={'event': 'unhandled_request_error'})
         return jsonify({'status': 'error', 'error': {'code': 'internal_error', 'message': 'The request could not be completed.'}}), 500
 
+    @app.get('/health')
     @app.get('/healthz')
     def healthz():
         return jsonify({'status': 'live'}), 200
