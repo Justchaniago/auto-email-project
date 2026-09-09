@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 from email.message import EmailMessage
 from flask import Flask, request, jsonify
 import requests
@@ -8,6 +9,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from google.cloud import firestore
 
 app = Flask(__name__)
 
@@ -16,11 +18,19 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.compose']
 
 def get_gmail_service(store_code):
     creds = None
-    token_file = f'token_{store_code}.json'
     
-    # Check if specific token file exists
-    if os.path.exists(token_file):
-        creds = Credentials.from_authorized_user_file(token_file, SCOPES)
+    # Initialize Firestore Client
+    db = firestore.Client(project="project-a2bb3a13-c8e1-4097-92d")
+    doc_ref = db.collection("gmail_tokens").document(store_code)
+    
+    # Try to load token from Firestore
+    try:
+        doc = doc_ref.get()
+        if doc.exists:
+            token_data = doc.to_dict()
+            creds = Credentials.from_authorized_user_info(token_data, SCOPES)
+    except Exception as e:
+        print(f"Firestore read error: {e}")
     
     # If credentials not valid, let user log in or refresh
     if not creds or not creds.valid:
@@ -38,9 +48,12 @@ def get_gmail_service(store_code):
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
             
-        # Save credentials for specific store
-        with open(token_file, 'w') as token:
-            token.write(creds.to_json())
+        # Save credentials to Firestore
+        try:
+            token_info = json.loads(creds.to_json())
+            doc_ref.set(token_info)
+        except Exception as e:
+            send_telegram_notification(f"⚠️ [{store_code.upper()}] Error saving token to Firestore: {str(e)}")
             
     return build('gmail', 'v1', credentials=creds)
 

@@ -1,6 +1,17 @@
-token.json
-credentials.json
-.env
+# Python virtual environment
+venv/
 __pycache__/
 *.pyc
+
+# Gmail OAuth secrets (CRITICAL)
+credentials.json
+token*.json
+output.json
+
+# Environment variables and configurations
+.env
+.flaskenv
+
+# OS files
 .DS_Store
+.aider*
