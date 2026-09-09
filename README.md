@@ -8,7 +8,7 @@ Deterministic scheduled Gmail draft-generation service for store operational rep
 python -m pytest -q
 ```
 
-The production image runs Gunicorn and does not include `credentials.json`. Gmail runtime credentials must be authorized token state in Firestore. Use `python scripts/seed_token.py <store_code>` locally for the one-time browser authorization, then upload the resulting token through an explicit operator procedure.
+The production image runs Gunicorn and does not include `credentials.json`. Gmail runtime credentials must be authorized token state in Firestore. Use `python -m scripts.seed_token <store_code>` locally for the one-time browser authorization, then upload the resulting token through an explicit operator procedure.
 
 ## API
 

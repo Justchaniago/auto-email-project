@@ -10,9 +10,9 @@ Repeated scheduled delivery returns the completed draft. A correction requires `
 
 ## Boundaries and failure semantics
 
-Domain composition and models are pure application concerns. Firestore and Gmail live behind infrastructure adapters. A confirmed Gmail draft is completed even if Telegram notification fails; Telegram is bounded and best-effort. A transport failure after a potentially-mutating Gmail call is `EFFECT_UNCERTAIN`, and normal retry refuses to create another draft. This cannot eliminate the external API's distributed-system ambiguity; operator reconciliation remains necessary.
+Domain composition and models are pure application concerns. Firestore and Gmail live behind infrastructure adapters. A confirmed Gmail draft is completed immediately; Auto Email does not own or perform Telegram notifications. Operational observability and notifications are owned externally by Neo AVO. A transport failure after a potentially-mutating Gmail call is `EFFECT_UNCERTAIN`, and normal retry refuses to create another draft. This cannot eliminate the external API's distributed-system ambiguity; operator reconciliation remains necessary.
 
-Credentials are persisted authorized-user state, refreshed headlessly, and never recovered interactively in Cloud Run. `scripts/seed_token.py` is an explicit local operator tool only.
+Credentials are persisted authorized-user state, refreshed headlessly, and never recovered interactively in Cloud Run. `python -m scripts.seed_token` is an explicit local operator tool only.
 
 `/healthz` is liveness. `/readyz` reports configuration readiness without Gmail mutation or credential refresh. Production should use Cloud Run IAM/OIDC and `--no-allow-unauthenticated` for Scheduler invocation.
 
