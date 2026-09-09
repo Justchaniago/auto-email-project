@@ -9,6 +9,7 @@ from app.gmail.drafts import GmailDrafts
 from app.persistence.firestore import FirestoreTokenStore, create_client
 from app.persistence.run_repository import FirestoreRunRepository
 from app.service import AutoEmailService
+from app.telemetry.neo_avo import NeoAvoTelemetry
 
 log = logging.getLogger(__name__)
 
@@ -18,10 +19,18 @@ def create_app(service=None, settings=None):
     if service is None:
         db = create_client(settings.project_id, settings.firestore_database)
         creds = CredentialProvider(FirestoreTokenStore(db))
+        telemetry = NeoAvoTelemetry(
+            base_url=settings.neo_avo_base_url,
+            api_token=settings.neo_avo_api_token,
+            project_id=settings.neo_avo_project_id,
+            environment=settings.neo_avo_environment,
+            timeout_seconds=settings.neo_avo_timeout_seconds,
+        )
         service = AutoEmailService(
             settings,
             FirestoreRunRepository(db),
-            GmailDrafts(GmailClientFactory(creds))
+            GmailDrafts(GmailClientFactory(creds)),
+            telemetry=telemetry,
         )
 
     @app.errorhandler(AutoEmailError)

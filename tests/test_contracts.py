@@ -9,6 +9,7 @@ from app.service import AutoEmailService, business_date
 from app.api.routes import create_app
 from app.gmail.credentials import CredentialProvider
 from app.domain.errors import CredentialRefreshError
+from app.telemetry.neo_avo import NeoAvoTelemetry
 
 class Drafts:
     def __init__(self, result='draft-1', error=None):
@@ -23,7 +24,15 @@ class Drafts:
         return self.result
 
 def settings():
-    return Settings(None, ('a@example.com',), None)
+    return Settings(
+        project_id=None,
+        email_recipients=('a@example.com',),
+        firestore_database=None,
+        neo_avo_base_url="https://neo-avo.chaniago.me",
+        neo_avo_api_token="test-token",
+        neo_avo_project_id="auto-email",
+        neo_avo_environment="production",
+    )
 
 def test_jakarta_date_and_deterministic_composition():
     instant = datetime(2026, 9, 8, 17, 30, tzinfo=timezone.utc)
@@ -103,3 +112,67 @@ def test_health_and_safe_api_error():
     assert client.get('/readyz').status_code == 200
     response = client.post('/api/v1/runs/unknown')
     assert response.status_code == 400 and 'Unsupported store code' in response.json['error']['message'] and 'Traceback' not in response.text
+
+def test_telemetry_success_and_failure_isolation():
+    recorded = []
+    class FakeResponse:
+        status_code = 202
+        text = '{"accepted":1}'
+    def fake_sender(url, json=None, headers=None, timeout=None):
+        recorded.append({"url": url, "json": json, "headers": headers})
+        return FakeResponse()
+
+    telemetry = NeoAvoTelemetry(api_token="test-tok", sender=fake_sender)
+    svc = AutoEmailService(settings(), InMemoryRunRepository(), Drafts('draft-telemetry'), telemetry=telemetry)
+
+    res = svc.run('tp6')
+    assert res['status'] == 'success'
+    assert res['draft_id'] == 'draft-telemetry'
+    assert len(recorded) == 1
+
+    event = recorded[0]["json"]["events"][0]
+    assert event["schemaVersion"] == 1
+    assert event["projectId"] == "auto-email"
+    assert event["environment"] == "production"
+    assert event["type"] == "task.completed"
+    assert event["data"]["outcome"] == "created"
+    assert event["data"]["draftId"] == "draft-telemetry"
+    # Verify no sensitive info is emitted
+    payload_str = str(recorded[0]["json"])
+    assert "finance@indovaris.com" not in payload_str
+    assert "token" not in event["data"]
+
+    # Now verify telemetry failure does not alter business result
+    def broken_sender(url, json=None, headers=None, timeout=None):
+        raise TimeoutError("connection timeout to neo-avo")
+
+    broken_telemetry = NeoAvoTelemetry(api_token="test-tok", sender=broken_sender)
+    svc_broken = AutoEmailService(settings(), InMemoryRunRepository(), Drafts('draft-broken-telemetry'), telemetry=broken_telemetry)
+    res2 = svc_broken.run('pms')
+    assert res2['status'] == 'success'
+    assert res2['draft_id'] == 'draft-broken-telemetry'
+
+def test_telemetry_deterministic_event_id_and_replay():
+    recorded = []
+    class FakeResponse:
+        status_code = 202
+        text = '{"accepted":1}'
+    def fake_sender(url, json=None, headers=None, timeout=None):
+        recorded.append(json["events"][0])
+        return FakeResponse()
+
+    telemetry = NeoAvoTelemetry(api_token="test-tok", sender=fake_sender)
+    repo = InMemoryRunRepository()
+    svc = AutoEmailService(settings(), repo, Drafts('draft-rep'), telemetry=telemetry)
+
+    svc.run('tp6')
+    first_event = recorded[0]
+    assert first_event["eventId"].endswith(":gen-1:completed")
+    assert first_event["data"]["outcome"] == "created"
+
+    # Replay
+    svc.run('tp6')
+    second_event = recorded[1]
+    assert second_event["eventId"].endswith(":gen-1:replay")
+    assert second_event["data"]["outcome"] == "idempotent_replay"
+    assert first_event["eventId"] != second_event["eventId"]
