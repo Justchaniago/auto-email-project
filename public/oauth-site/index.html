@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Email | Operational Automation Service</title>
+  <meta name="description" content="Auto Email is an internal operational automation service that creates scheduled Gmail drafts for authorized store accounts.">
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --surface: #ffffff;
+      --text: #111827;
+      --text-muted: #4b5563;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --surface: #1e293b;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --accent: #3b82f6;
+        --accent-soft: #1e3a8a;
+      }
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0 1rem;
+    }
+    .container {
+      max-width: 760px;
+      margin: 3rem auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2.5rem;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    p {
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    ul {
+      margin-left: 1.25rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-muted);
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 1rem 1.25rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1.5rem 0;
+    }
+    .callout p {
+      color: var(--text);
+      margin: 0;
+    }
+    nav {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.9rem;
+    }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      margin-bottom: 3rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Internal Operations</span>
+      <h1>Auto Email</h1>
+      <p>Deterministic scheduled Gmail draft automation for store operational reporting.</p>
+    </header>
+
+    <main>
+      <h2>About Auto Email</h2>
+      <p>
+        Auto Email is a private, internal operational automation service designed exclusively to prepare structured operational reporting email drafts for authorized retail store accounts. It executes unattended on scheduled triggers to compose draft reports directly within the authorized store's Gmail account.
+      </p>
+
+      <div class="callout">
+        <p><strong>Core Invariant:</strong> Auto Email creates drafts only. It does not send emails automatically, does not read your inbox, and cannot delete or modify existing mail messages.</p>
+      </div>
+
+      <h2>Operational Principles & Boundaries</h2>
+      <ul>
+        <li><strong>Internal Tooling Only:</strong> The application is restricted to explicitly authorized operational personnel and internal store accounts. It is not open to public registration or commercial use.</li>
+        <li><strong>Gmail Compose Scope Only:</strong> Auto Email requests solely the <code>https://www.googleapis.com/auth/gmail.compose</code> scope, strictly necessary to create reporting drafts.</li>
+        <li><strong>No Inbox Reading:</strong> The service does not read, inspect, parse, or process messages in your inbox, sent items, or any other mailbox folders.</li>
+        <li><strong>No Sale or Distribution of Data:</strong> Google user data and credentials are never sold, rented, monetized, or shared with third parties or external marketing entities.</li>
+        <li><strong>Encrypted & Isolated Credentials:</strong> OAuth credentials and access tokens are secured inside restricted Google Cloud infrastructure, utilized solely for scheduled job execution.</li>
+      </ul>
+
+      <h2>Account Access & Revocation</h2>
+      <p>
+        Connecting a store Gmail account requires explicit administrative authorization. Access can be inspected and revoked at any time directly through your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Account Permissions</a> page.
+      </p>
+    </main>
+
+    <nav>
+      <a href="index.html">Overview</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+    </nav>
+  </div>
+
+  <footer>
+    &copy; Auto Email. Internal Operational Automation.
+  </footer>
+</body>
+</html>

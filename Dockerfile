@@ -9,10 +9,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY app ./app
+COPY main.py .
 
 # Expose port (Cloud Run defaults to 8080)
 EXPOSE 8080
 
 # Run Flask using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "main:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} main:app"]

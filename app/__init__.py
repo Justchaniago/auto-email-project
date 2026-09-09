@@ -1,0 +1,1 @@
+"""Auto Email application package."""
